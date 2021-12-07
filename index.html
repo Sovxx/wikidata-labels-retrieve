@@ -15,7 +15,9 @@ function retrieve(myCallback) {
   var lines = document.getElementById("intext").value.split('\n');
   var xhttp = [];
   for(var i = 0;i < lines.length;i++) {
-    (function(i){  // https://stackoverflow.com/questions/25220486/xmlhttprequest-in-for-loop
+    (function(i){  
+      // https://en.wikipedia.org/wiki/Immediately_invoked_function_expression
+      // https://stackoverflow.com/questions/25220486/xmlhttprequest-in-for-loop
       var Q = lines[i].replace(/ .*/,'');
       var url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + Q + "&languages=en&format=json&origin=*";
       // https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
