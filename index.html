@@ -1,0 +1,45 @@
+<html>
+<body>
+
+List of wikidata Qxxxxxx :<br>
+<textarea name="" id="intext" cols="120" rows="15"></textarea><br><br>
+
+<div id="mainbutton">
+<button type="button" onclick="retrieve(myDisplayer)">Retrieve english labels for each Q</button>
+</div><br>
+
+<div id="outtext"> </div>
+
+<script type="text/javascript">
+function retrieve(myCallback) {
+  var lines = document.getElementById("intext").value.split('\n');
+  var xhttp = [];
+  for(var i = 0;i < lines.length;i++) {
+    (function(i){  // https://stackoverflow.com/questions/25220486/xmlhttprequest-in-for-loop
+      var Q = lines[i].replace(/ .*/,'');
+      var url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + Q + "&languages=en&format=json&origin=*";
+      // https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
+      // https://www.wikidata.org/wiki/Special:ApiSandbox#action=wbgetentities&ids=Q42
+      xhttp[i] = new XMLHttpRequest();
+      xhttp[i].open("GET", url, true);
+      xhttp[i].withCredentials = false;
+      xhttp[i].setRequestHeader("Content-type", "application/json; charset=utf-8");
+      xhttp[i].onreadystatechange = function() {
+        if (xhttp[i].readyState == 4 && xhttp[i].status == 200) {  //  https://www.w3schools.com/js/js_asynchronous.asp
+          myCallback(Q, xhttp[i].responseText)
+        }
+      };
+      xhttp[i].send();
+    })(i);
+  }
+}
+function myDisplayer(Q, response){
+  var responseJSON = JSON.parse(response)
+  console.log(responseJSON)
+  document.getElementById("outtext").innerHTML = document.getElementById("outtext").innerHTML + "<br>" + Q + " : " + responseJSON.entities[Q].labels.en.value
+  console.log(responseJSON.entities[Q].aliases.en)  // aliases are available here
+}
+</script>
+
+</body>
+</html>
