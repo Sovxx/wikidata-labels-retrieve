@@ -3,9 +3,10 @@
 
 List of wikidata Qxxxxxx :<br>
 <textarea name="" id="intext" cols="120" rows="15"></textarea><br><br>
-
+Language : <br>
+<textarea name="" id="languagetext" cols="5" rows="1">en</textarea><br><br>
 <div id="mainbutton">
-<button type="button" onclick="retrieve(myDisplayer)">Retrieve english labels for each Q</button>
+<button type="button" onclick="retrieve(myDisplayer)">Retrieve labels for each Q</button>
 </div><br>
 
 <div id="outtext"> </div>
@@ -14,12 +15,13 @@ List of wikidata Qxxxxxx :<br>
 function retrieve(myCallback) {
   var lines = document.getElementById("intext").value.split('\n');
   var xhttp = [];
+  var language = document.getElementById("languagetext").value
   for(var i = 0;i < lines.length;i++) {
-    (function(i){  
+    (function(i){
       // https://en.wikipedia.org/wiki/Immediately_invoked_function_expression
       // https://stackoverflow.com/questions/25220486/xmlhttprequest-in-for-loop
       var Q = lines[i].replace(/ .*/,'');
-      var url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + Q + "&languages=en&format=json&origin=*";
+      var url = "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=" + Q + "&languages=" + language + "&format=json&origin=*";
       // https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities
       // https://www.wikidata.org/wiki/Special:ApiSandbox#action=wbgetentities&ids=Q42
       xhttp[i] = new XMLHttpRequest();
@@ -28,20 +30,40 @@ function retrieve(myCallback) {
       xhttp[i].setRequestHeader("Content-type", "application/json; charset=utf-8");
       xhttp[i].onreadystatechange = function() {
         if (xhttp[i].readyState == 4 && xhttp[i].status == 200) {  //  https://www.w3schools.com/js/js_asynchronous.asp
-          myCallback(Q, xhttp[i].responseText)
+          myCallback(Q, language, xhttp[i].responseText)
         }
+      };
+      xhttp[i].timeout = 2000
+      xhttp[i].ontimeout = function() {
+          document.getElementById("outtext").innerHTML +="<br>" + Q + " : *** ERROR : Time out ***"
       };
       xhttp[i].send();
     })(i);
   }
 }
-function myDisplayer(Q, response){
+function myDisplayer(Q, language, response){
   var responseJSON = JSON.parse(response)
   console.log(responseJSON)
-  document.getElementById("outtext").innerHTML = document.getElementById("outtext").innerHTML + "<br>" + Q + " : " + responseJSON.entities[Q].labels.en.value
-  console.log(responseJSON.entities[Q].aliases.en)  // aliases are available here
+  if(responseJSON.hasOwnProperty('entities')){
+    if(responseJSON.entities[Q].hasOwnProperty('labels')){
+      if(responseJSON.entities[Q].labels.hasOwnProperty(language)){
+        document.getElementById("outtext").innerHTML += "<br>" + Q + " : " + responseJSON.entities[Q].labels[language].value
+      }
+      else {
+        document.getElementById("outtext").innerHTML += "<br>" + Q + " : <b>*** WARNING : No label in selected language ***</b>"
+      }
+    }
+    else {
+      document.getElementById("outtext").innerHTML += "<br>" + Q + " : <b>*** WARNING : No label in any language ***</b>"
+    }
+  }
+  else {
+    document.getElementById("outtext").innerHTML += "<br>" + Q + " : <b>*** WARNING : No entity ***</b>"
+  }
+  console.log(responseJSON.entities[Q].aliases[language])  // aliases are available here
 }
 </script>
+
 <br><br><a href="https://github.com/Sovxx/wikidata-labels-retrieve">https://github.com/Sovxx/wikidata-labels-retrieve</a>
 </body>
 </html>
